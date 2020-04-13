@@ -6,6 +6,7 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.orm.JpaNativeQueryProvider;
 import org.springframework.batch.item.file.FlatFileItemWriter;
@@ -15,11 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.data.domain.PageRequest;
 
 import javax.persistence.EntityManagerFactory;
-import java.awt.print.Pageable;
-import java.util.Collections;
 
 @Configuration
 @EnableBatchProcessing
@@ -50,32 +48,32 @@ public class ReadFromDB {
     }
 
     @Bean
-    public JpaPagingItemReader<User> reader() throws Exception {
-        String sqlQuery = "select * from batch_user";
+    public ItemReader<User> reader() throws Exception {
+       /* String sqlQuery = "select * from batch_user";
 
         JpaPagingItemReader<User> reader = new JpaPagingItemReader<>();
 
         //creating a native query provider as it would be created in configuration
-        JpaNativeQueryProvider<User> queryProvider= new JpaNativeQueryProvider<>();
+        JpaNativeQueryProvider<User> queryProvider = new JpaNativeQueryProvider<>();
         queryProvider.setSqlQuery(sqlQuery);
         queryProvider.setEntityClass(User.class);
         queryProvider.afterPropertiesSet();
 
-       // reader.setParameterValues(Collections.<String, Object>singletonMap("limit", 2));
+        // reader.setParameterValues(Collections.<String, Object>singletonMap("limit", 2));
         reader.setEntityManagerFactory(entityManagerFactory);
         reader.setPageSize(30);
         reader.setQueryProvider(queryProvider);
         reader.afterPropertiesSet();
-        reader.setSaveState(true);
+        reader.setSaveState(true);*/
 
-        return reader;
+        return new CustomJpaItemReader();
     }
 
 
     @Bean
     public FlatFileItemWriter<User> writer() {
         FlatFileItemWriter<User> writer = new FlatFileItemWriter<>();
-        writer.setResource(new FileSystemResource("csv/users.csv"));
+        writer.setResource(new FileSystemResource("files/users.txt"));
         writer.setLineAggregator(new DelimitedLineAggregator<User>() {{
             setDelimiter("|");
             setFieldExtractor(new BeanWrapperFieldExtractor<User>() {{
