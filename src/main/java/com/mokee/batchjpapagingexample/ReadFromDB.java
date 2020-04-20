@@ -5,16 +5,16 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.database.JpaPagingItemReader;
-import org.springframework.batch.item.database.orm.JpaNativeQueryProvider;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.FileSystemResource;
 
 import javax.persistence.EntityManagerFactory;
@@ -28,6 +28,11 @@ public class ReadFromDB {
     private StepBuilderFactory stepBuilderFactory;
     @Autowired
     private EntityManagerFactory entityManagerFactory;
+    @Autowired
+    private JobLauncher jobLauncher;
+    @Autowired
+    private UserRepository userRepository;
+
 
     @Bean
     public Job readUser() throws Exception {
@@ -41,14 +46,15 @@ public class ReadFromDB {
     @Bean
     public Step step1() throws Exception {
         return stepBuilderFactory.get("step1")
-                .<User, User>chunk(10)
+                .<UserModel, UserModel>chunk(10)
                 .reader(reader())
                 .writer(writer())
                 .build();
     }
 
     @Bean
-    public ItemReader<User> reader() throws Exception {
+    @Scope(value = "prototype")
+    public ItemReader<UserModel> reader() throws Exception {
        /* String sqlQuery = "select * from batch_user";
 
         JpaPagingItemReader<User> reader = new JpaPagingItemReader<>();
@@ -66,17 +72,17 @@ public class ReadFromDB {
         reader.afterPropertiesSet();
         reader.setSaveState(true);*/
 
-        return new CustomJpaItemReader();
+        return new CustomJpaItemReader(userRepository);
     }
 
 
     @Bean
-    public FlatFileItemWriter<User> writer() {
-        FlatFileItemWriter<User> writer = new FlatFileItemWriter<>();
+    public FlatFileItemWriter<UserModel> writer() {
+        FlatFileItemWriter<UserModel> writer = new FlatFileItemWriter<>();
         writer.setResource(new FileSystemResource("files/users.txt"));
-        writer.setLineAggregator(new DelimitedLineAggregator<User>() {{
+        writer.setLineAggregator(new DelimitedLineAggregator<UserModel>() {{
             setDelimiter("|");
-            setFieldExtractor(new BeanWrapperFieldExtractor<User>() {{
+            setFieldExtractor(new BeanWrapperFieldExtractor<UserModel>() {{
                 setNames(new String[]{"id", "username", "password", "age"});
             }});
         }});

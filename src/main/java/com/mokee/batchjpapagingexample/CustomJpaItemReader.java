@@ -7,47 +7,51 @@ import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-public class CustomJpaItemReader implements ItemReader<User> {
+public class CustomJpaItemReader implements ItemReader<UserModel> {
     private int nextUserIndex;
-    private List<User> userList = null;
+    private List<UserModel> userModelList = null;
 
-    CustomJpaItemReader() {
+
+    private UserRepository userRepository;
+
+    CustomJpaItemReader(UserRepository userRepository) {
+        this.userRepository = userRepository;
         initialize();
+        System.out.println("CustomJpaItemReader initialized");
     }
 
     private void initialize() {
-        userList = new ArrayList<>(0);
-        User a = new User();
-        a.setId(1);
-        a.setUsername("a");
-        a.setPassword("a");
-        a.setAge(20);
+        userModelList = new ArrayList<>(0);
+        List<User> users = userRepository.findAll();
 
-        User b = new User();
-        b.setId(1);
-        b.setUsername("b");
-        b.setPassword("b");
-        b.setAge(25);
+        if (Objects.nonNull(users) && !users.isEmpty()) {
+            users.forEach(user -> {
+                UserModel userModel = new UserModel();
+                userModel.setId(1);
+                userModel.setUsername("a");
+                userModel.setPassword("a");
+                userModel.setAge(20);
+                userModelList.add(userModel);
+            });
+        }
 
 
-        userList = Collections.unmodifiableList(Arrays.asList(a, b));
         nextUserIndex = 0;
     }
 
 
     @Override
-    public User read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
-        User nextUser = null;
+    public UserModel read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+        UserModel nextUserModel = null;
 
-        if (nextUserIndex < userList.size()) {
-            nextUser = userList.get(nextUserIndex);
+        if (nextUserIndex < userModelList.size()) {
+            nextUserModel = userModelList.get(nextUserIndex);
             nextUserIndex++;
         }
 
-        return nextUser;
+        return nextUserModel;
     }
 }

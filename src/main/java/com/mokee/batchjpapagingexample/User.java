@@ -1,14 +1,18 @@
 package com.mokee.batchjpapagingexample;
 
-
 import lombok.Data;
 
-@Data
-public class User {
- 
+import javax.persistence.*;
 
-  int id;
-  String username;
-  String password;
-  int age;
+@Data
+@Entity
+@Table(name = "batch_usr")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    Integer id;
+    String username;
+    String password;
+    Integer age;
 }
